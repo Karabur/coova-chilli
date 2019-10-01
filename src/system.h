@@ -78,15 +78,6 @@
 #include <sys/stat.h>
 #endif
 
-#ifdef HAVE_LINUX_SYSINFO_H
-#define _LINUX_KERNEL_H
-#include <linux/sysinfo.h>
-#endif
-
-#ifdef HAVE_SYS_SYSINFO_H
-#include <sys/sysinfo.h>
-#endif
-
 #ifdef HAVE_TIME_H
 #include <time.h>
 #endif
