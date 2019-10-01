@@ -39,7 +39,7 @@ static const char *copyright =
 static const char *usage =
   "Usage: chilli [OPTIONS]...\n";
 
-static const char *compile_options = "Compiled with "
+static const char *compile_options = "(RF version) Compiled with "
 #ifdef ENABLE_AUTHEDALLOWED
   "ENABLE_AUTHEDALLOWED "
 #endif
