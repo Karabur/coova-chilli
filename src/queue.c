@@ -13,13 +13,13 @@ static u_int32_t print_pkt (struct nfq_data *tb) {
   struct nfqnl_msg_packet_hdr *ph;
   u_int32_t mark,ifi;
   int id = 0;
-  char *data;
+  unsigned char *data;
   int ret;
 
   ph = nfq_get_msg_packet_hdr(tb);
   if (ph){
     id = ntohl(ph->packet_id);
-    printf("hw_protocol=0x%04x hook=%u id=%u ",
+    printf("hw_protocol=0x%04x hook=%u id=%i ",
 	   ntohs(ph->hw_protocol), ph->hook, id);
   }
 
@@ -110,8 +110,8 @@ int main(int argc, char **argv) {
   nfq_destroy_queue(qh);
 
 #ifdef INSANE
-        /* normally, applications SHOULD NOT issue this command, since
-         * it detaches other programs/sockets from AF_INET, too ! */
+  /* normally, applications SHOULD NOT issue this command, since
+   * it detaches other programs/sockets from AF_INET, too ! */
   printf("unbinding from AF_INET\n");
   nfq_unbind_pf(h, AF_INET);
 #endif

@@ -28,10 +28,10 @@ static int location_count=0;
 
 void location_close_conn(struct app_conn_t *conn, int close) {
 
-  syslog(LOG_DEBUG, "removing(%s) one of %d sessions from %s",
-	  close ? "closing" : "roaming out",
-	  conn->loc_search_node->total_sess_count,
-	  conn->loc_search_node->value);
+  syslog(LOG_DEBUG, "%s(%d): removing(%s) one of %d sessions from %s", __FUNCTION__, __LINE__,
+         close ? "closing" : "roaming out",
+         (int)conn->loc_search_node->total_sess_count,
+         conn->loc_search_node->value);
 
   conn->loc_search_node->total_sess_count--;
 
@@ -39,47 +39,47 @@ void location_close_conn(struct app_conn_t *conn, int close) {
   else conn->loc_search_node->roamed_out_sess_count++;
 
   conn->loc_search_node->closed_bytes_up +=
-    (conn->s_state.output_octets_old -
-     conn->s_state.output_octets);
+      (conn->s_state.output_octets_old -
+       conn->s_state.output_octets);
 
   conn->loc_search_node->closed_bytes_down +=
-    (conn->s_state.input_octets_old -
-     conn->s_state.input_octets);
+      (conn->s_state.input_octets_old -
+       conn->s_state.input_octets);
 
   conn->s_state.output_octets_old =
-    conn->s_state.output_octets;
+      conn->s_state.output_octets;
   conn->s_state.input_octets_old =
-    conn->s_state.input_octets;
+      conn->s_state.input_octets;
 
 #ifdef ENABLE_GARDENACCOUNTING
   if (_options.uamgardendata) {
     conn->loc_search_node->garden_closed_bytes_up +=
-      (conn->s_state.garden_output_octets_old -
-       conn->s_state.garden_output_octets);
+        (conn->s_state.garden_output_octets_old -
+         conn->s_state.garden_output_octets);
 
     conn->loc_search_node->garden_closed_bytes_down +=
-      (conn->s_state.garden_input_octets_old -
-       conn->s_state.garden_input_octets);
+        (conn->s_state.garden_input_octets_old -
+         conn->s_state.garden_input_octets);
 
     conn->s_state.garden_output_octets_old =
-      conn->s_state.garden_output_octets;
+        conn->s_state.garden_output_octets;
 
     conn->s_state.garden_input_octets_old =
-      conn->s_state.garden_input_octets;
+        conn->s_state.garden_input_octets;
 
     conn->loc_search_node->other_closed_bytes_up +=
-      (conn->s_state.other_output_octets_old -
-       conn->s_state.other_output_octets);
+        (conn->s_state.other_output_octets_old -
+         conn->s_state.other_output_octets);
 
     conn->loc_search_node->other_closed_bytes_down +=
-      (conn->s_state.other_input_octets_old -
-       conn->s_state.other_input_octets);
+        (conn->s_state.other_input_octets_old -
+         conn->s_state.other_input_octets);
 
     conn->s_state.other_output_octets_old =
-      conn->s_state.other_output_octets;
+        conn->s_state.other_output_octets;
 
     conn->s_state.other_input_octets_old =
-      conn->s_state.other_input_octets;
+        conn->s_state.other_input_octets;
   }
 #endif
 
@@ -87,16 +87,15 @@ void location_close_conn(struct app_conn_t *conn, int close) {
 }
 
 static int
-avl_comp(const void *k1, const void *k2,
-	 void *ptr __attribute__ ((unused))) {
+avl_comp(const void *k1, const void *k2) {
   int result = strncmp(k1, k2, MAX_LOCATION_LENGTH);
-  syslog(LOG_DEBUG, "%s result %d",__FUNCTION__,result);
+  syslog(LOG_DEBUG, "%s(%d): result %d",__FUNCTION__, __LINE__, result);
   /* log_dbg("k1: %s k2: %s",k1,k2); */
   return result;
 }
 
 struct loc_search_t *location_find(char *loc) {
-  syslog(LOG_DEBUG, "looking for location: %s", loc);
+  syslog(LOG_DEBUG, "%s(%d): looking for location: %s", __FUNCTION__, __LINE__, loc);
   return (struct loc_search_t *)avl_find(&loc_search_tree, loc);
 }
 
@@ -111,11 +110,11 @@ void location_add_conn(struct app_conn_t *appconn, char *loc) {
 
   loc_search = (struct loc_search_t *)avl_find(&loc_search_tree, loc);
 
-  syslog(LOG_DEBUG, "checking location: %s", loc);
+  syslog(LOG_DEBUG, "%s(%d): checking location: %s", __FUNCTION__, __LINE__, loc);
   if (loc_search == NULL) {
     location_count++;
-    syslog(LOG_DEBUG, "creating tree entry %d for location: %s",
-	    location_count, loc);
+    syslog(LOG_DEBUG, "%s(%d): creating tree entry %d for location: %s", __FUNCTION__, __LINE__, 
+           location_count, loc);
     loc_search=calloc(1, sizeof(*loc_search));
     memcpy(loc_search->value,loc,sizeof(loc_search->value));
     loc_search->node.key = loc_search->value;
@@ -136,8 +135,8 @@ void location_add_conn(struct app_conn_t *appconn, char *loc) {
   else loc_search->new_sess_count++;
 
   appconn->loc_search_node=loc_search;
-  syslog(LOG_DEBUG, "location '%s' now has %d sessions attached",
-	  loc,loc_search->total_sess_count);
+  syslog(LOG_DEBUG, "%s(%d): location '%s' now has %d sessions attached", __FUNCTION__, __LINE__, 
+         loc,(int)loc_search->total_sess_count);
 }
 
 void location_printlist(bstring s, char *loc, int json, int list) {
@@ -165,12 +164,12 @@ void location_printlist(bstring s, char *loc, int json, int list) {
 
     if (timespan >= 1) {
 
-      syslog(LOG_DEBUG, "roamed_in_session_count %d, out %d",
-	      loc_search->roamed_in_sess_count,
-	      loc_search->roamed_out_sess_count);
-      syslog(LOG_DEBUG, "new_session_count %d, closed %d",
-	      loc_search->new_sess_count,
-	      loc_search->closed_sess_count);
+      syslog(LOG_DEBUG, "%s(%d): roamed_in_session_count %d, out %d", __FUNCTION__, __LINE__,
+             (int)loc_search->roamed_in_sess_count,
+             (int)loc_search->roamed_out_sess_count);
+      syslog(LOG_DEBUG, "%s(%d): new_session_count %d, closed %d", __FUNCTION__, __LINE__,
+             (int)loc_search->new_sess_count,
+             (int)loc_search->closed_sess_count);
 
       bassignformat(tmp,json ?
 		    ",\"sessions_roamed_in\":%d,"
@@ -197,8 +196,8 @@ void location_printlist(bstring s, char *loc, int json, int list) {
 #endif
 	int last_sent;
 
-	syslog(LOG_DEBUG, "location has %d sessions attached! ",loc_search->total_sess_count);
-	syslog(LOG_DEBUG, "(last queried %d seconds ago)\n",(act_mainclock-loc_search->last_queried));
+	syslog(LOG_DEBUG, "%s(%d): location has %d sessions attached! ", __FUNCTION__, __LINE__, (int)loc_search->total_sess_count);
+	syslog(LOG_DEBUG, "%s(%d): (last queried %d seconds ago)\n", __FUNCTION__, __LINE__, (int)(act_mainclock-loc_search->last_queried));
 
 	bassignformat(tmp,json ?
 		      ",\"session_count\":%d,\"seconds_elapsed\":%d" :
@@ -219,12 +218,12 @@ void location_printlist(bstring s, char *loc, int json, int list) {
 	  appconn = container_of(ln,struct app_conn_t,loc_sess);
 
 	  bytes_up =
-	    appconn->s_state.output_octets -
-	    appconn->s_state.output_octets_old;
+              appconn->s_state.output_octets -
+              appconn->s_state.output_octets_old;
 
 	  bytes_down =
-	    appconn->s_state.input_octets -
-	    appconn->s_state.input_octets_old;
+              appconn->s_state.input_octets -
+              appconn->s_state.input_octets_old;
 
 	  if (_options.swapoctets) {
 	    swap = bytes_up;
@@ -263,10 +262,10 @@ void location_printlist(bstring s, char *loc, int json, int list) {
 	  } else last_sent=-1;
 
 	  if (list) {
-	    syslog(LOG_DEBUG, "mac: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X up: %d down: %d\n",
-		    appconn->hismac[0], appconn->hismac[1], appconn->hismac[2],
-		    appconn->hismac[3], appconn->hismac[4], appconn->hismac[5],
-		    bytes_up,bytes_down);
+	    syslog(LOG_DEBUG, "%s(%d): mac: %.2X-%.2X-%.2X-%.2X-%.2X-%.2X up: %d down: %d\n", __FUNCTION__, __LINE__, 
+                   appconn->hismac[0], appconn->hismac[1], appconn->hismac[2],
+                   appconn->hismac[3], appconn->hismac[4], appconn->hismac[5],
+                   bytes_up,bytes_down);
 
 	    bassignformat(tmp,json ?
 			  "{\"mac\":\"%.2X-%.2X-%.2X-%.2X-%.2X-%.2X\","
@@ -404,9 +403,9 @@ void location_printlist(bstring s, char *loc, int json, int list) {
 	other_total_bytes_down += loc_search->other_closed_bytes_down;
 
 	loc_search->garden_closed_bytes_up =
-	  loc_search->garden_closed_bytes_down =
-	  loc_search->other_closed_bytes_up =
-	  loc_search->other_closed_bytes_down = 0;
+            loc_search->garden_closed_bytes_down =
+            loc_search->other_closed_bytes_up =
+            loc_search->other_closed_bytes_down = 0;
       }
 #endif
 
@@ -459,19 +458,19 @@ void location_printlist(bstring s, char *loc, int json, int list) {
       loc_search->last_queried = act_mainclock;
       /*reset traffic counter*/
       loc_search->new_sess_count
-	= loc_search->closed_sess_count
-	= loc_search->roamed_in_sess_count
-	= loc_search->roamed_out_sess_count = 0;
+          = loc_search->closed_sess_count
+          = loc_search->roamed_in_sess_count
+          = loc_search->roamed_out_sess_count = 0;
 
     } else { /*query too short after the last*/
-      syslog(LOG_DEBUG, "last query less than 1 second ago!!\n");
+      syslog(LOG_DEBUG, "%s(%d): last query less than 1 second ago!!\n", __FUNCTION__, __LINE__);
       bassignformat(tmp,json
 		    ? ",\"session_count\":-2"
 		    : "\n\tsession_count = -2");
       bconcat(s,tmp);
     }
   } else {
-    syslog(LOG_DEBUG, "location (%s) not found!", loc);
+    syslog(LOG_DEBUG, "%s(%d): location (%s) not found!", __FUNCTION__, __LINE__, loc);
     bassignformat(tmp,json ?
 		  ",\"session_count\":-1"
 		  ",\"location_count\":%d" :
@@ -514,12 +513,12 @@ void location_init() {
 #ifdef HAVE_AVL
   struct app_conn_t *conn = firstusedconn;
   memset(&loc_search_tree, 0, sizeof(loc_search_tree));
-  avl_init(&loc_search_tree, avl_comp, false, NULL);
+  avl_init(&loc_search_tree, avl_comp, false);
   while (conn) {
-    syslog(LOG_DEBUG, "restoring location (%s) of conn %X-%X-%X-%X-%X-%X\n",
-	    conn->s_state.location,
-	    conn->hismac[0],conn->hismac[1],conn->hismac[2],
-	    conn->hismac[3],conn->hismac[4],conn->hismac[5]);
+    syslog(LOG_DEBUG, "%s(%d): restoring location (%s) of conn %X-%X-%X-%X-%X-%X\n", __FUNCTION__, __LINE__,
+           conn->s_state.location,
+           conn->hismac[0],conn->hismac[1],conn->hismac[2],
+           conn->hismac[3],conn->hismac[4],conn->hismac[5]);
     conn->loc_search_node = NULL;
     list_init_node(&conn->loc_sess);
     if (strlen(conn->s_state.location) > 0)

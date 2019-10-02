@@ -52,32 +52,32 @@ int option_aton(struct in_addr *addr, struct in_addr *mask,
 	     &m1, &m2, &m3, &m4);
 
   switch (c) {
-  case 4:
-    mask->s_addr = htonl(0xffffff00);
-    break;
-  case 5:
-    if (m1 > 32) {
+    case 4:
+      mask->s_addr = htonl(0xffffff00);
+      break;
+    case 5:
+      if (m1 > 32) {
+        syslog(LOG_ERR, "Invalid mask");
+        return -1; /* Invalid mask */
+      }
+      mask->s_addr = m1 > 0 ? htonl(0xffffffff << (32 - m1)) : 0;
+      break;
+    case 8:
+      if (m1 >= 256 ||  m2 >= 256 || m3 >= 256 || m4 >= 256) {
+        syslog(LOG_ERR, "Invalid mask");
+        return -1; /* Wrong mask format */
+      }
+      m = m1 * 0x1000000 + m2 * 0x10000 + m3 * 0x100 + m4;
+      for (masklog = 0; ((1 << masklog) < ((~m)+1)); masklog++);
+      if (((~m)+1) != (1 << masklog)) {
+        syslog(LOG_ERR, "Invalid mask");
+        return -1; /* Wrong mask format (not all ones followed by all zeros)*/
+      }
+      mask->s_addr = htonl(m);
+      break;
+    default:
       syslog(LOG_ERR, "Invalid mask");
       return -1; /* Invalid mask */
-    }
-    mask->s_addr = m1 > 0 ? htonl(0xffffffff << (32 - m1)) : 0;
-    break;
-  case 8:
-    if (m1 >= 256 ||  m2 >= 256 || m3 >= 256 || m4 >= 256) {
-      syslog(LOG_ERR, "Invalid mask");
-      return -1; /* Wrong mask format */
-    }
-    m = m1 * 0x1000000 + m2 * 0x10000 + m3 * 0x100 + m4;
-    for (masklog = 0; ((1 << masklog) < ((~m)+1)); masklog++);
-    if (((~m)+1) != (1 << masklog)) {
-      syslog(LOG_ERR, "Invalid mask");
-      return -1; /* Wrong mask format (not all ones followed by all zeros)*/
-    }
-    mask->s_addr = htonl(m);
-    break;
-  default:
-    syslog(LOG_ERR, "Invalid mask");
-    return -1; /* Invalid mask */
   }
 
   if (a1 >= 256 ||  a2 >= 256 || a3 >= 256 || a4 >= 256) {
@@ -115,7 +115,7 @@ static int opt_run(int argc, char **argv, int reload) {
 
   syslog(LOG_DEBUG, "(Re)processing options [%s]", file);
 
-  if ((status = safe_fork()) < 0) {
+  if ((status = fork()) < 0) {
     syslog(LOG_ERR, "%s: fork() returned -1!", strerror(errno));
     return -1;
   }
@@ -151,12 +151,14 @@ int options_load(int argc, char **argv, bstring bt) {
   static char done_before = 0;
   char file[128];
   int fd;
+  int i;
+  const int RETRY = 3;
 
   chilli_binconfig(file, sizeof(file), 0);
 
   fd = open(file, O_RDONLY);
 
-  while (fd < 0) {
+  for (i = 0; i < RETRY && fd < 0; i++) {
     int status = 0;
     int pid = opt_run(argc, argv, 0);
     waitpid(pid, &status, 0);
@@ -169,11 +171,11 @@ int options_load(int argc, char **argv, bstring bt) {
 	if (offline) {
 	  execl(
 #ifdef ENABLE_CHILLISCRIPT
-		SBINDIR "/chilli_script", SBINDIR "/chilli_script", _options.binconfig,
+              SBINDIR "/chilli_script", SBINDIR "/chilli_script", _options.binconfig,
 #else
-		offline,
+              offline,
 #endif
-		offline, (char *) 0);
+              offline, (char *) 0);
 
 	  break;
 	}
@@ -195,17 +197,17 @@ int options_mkdir(char *path) {
 
   if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)) {
     switch (errno) {
-    case EEXIST:
-      /* not necessarily a directory */
-      unlink(path);
-      if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)) {
-	syslog(LOG_ERR, "%s: mkdir %s", strerror(errno), path);
-	return -1;
-      }
-      break;
-    default:
-      syslog(LOG_ERR, "%s: mkdir %s", strerror(errno), path);
-      return -1;
+      case EEXIST:
+        /* not necessarily a directory */
+        unlink(path);
+        if (mkdir(path, S_IRWXU | S_IRWXG | S_IRWXO)) {
+          syslog(LOG_ERR, "%s: mkdir %s", strerror(errno), path);
+          return -1;
+        }
+        break;
+      default:
+        syslog(LOG_ERR, "%s: mkdir %s", strerror(errno), path);
+        return -1;
     }
   }
 
@@ -277,7 +279,7 @@ int options_fromfd(int fd, bstring bt) {
 #ifdef ENABLE_IEEE8021Q
   if (!option_s_l(bt, &o.vlanupdate)) return 0;
 #endif
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_PROXYVSA) || defined(ENABLE_LOCATION)
   if (!option_s_l(bt, &o.locationupdate)) return 0;
 #endif
 
@@ -304,6 +306,8 @@ int options_fromfd(int fd, bstring bt) {
   if (!option_s_l(bt, &o.routeif)) return 0;
   if (!option_s_l(bt, &o.peerkey)) return 0;
 
+  if (!option_s_l(bt, &o.rfc7710uri)) return 0;
+
   if (!option_s_l(bt, &o.macsuffix)) return 0;
   if (!option_s_l(bt, &o.macpasswd)) return 0;
 
@@ -322,6 +326,7 @@ int options_fromfd(int fd, bstring bt) {
   if (!option_s_l(bt, &o.sslkeypass)) return 0;
   if (!option_s_l(bt, &o.sslcertfile)) return 0;
   if (!option_s_l(bt, &o.sslcafile)) return 0;
+  if (!option_s_l(bt, &o.sslciphers)) return 0;
 #endif
 #ifdef USING_IPC_UNIX
   if (!option_s_l(bt, &o.unixipc)) return 0;
@@ -331,9 +336,6 @@ int options_fromfd(int fd, bstring bt) {
 #endif
 #ifdef HAVE_NETFILTER_COOVA
   if (!option_s_l(bt, &o.kname)) return 0;
-#endif
-#ifdef ENABLE_DNSLOG
-  if (!option_s_l(bt, &o.dnslog)) return 0;
 #endif
 #ifdef ENABLE_IPWHITELIST
   if (!option_s_l(bt, &o.ipwhitelist)) return 0;
@@ -397,7 +399,7 @@ int options_fromfd(int fd, bstring bt) {
     if (!_options.modules[i].ctx) continue;
     else {
       struct chilli_module *m =
-	(struct chilli_module *)_options.modules[i].ctx;
+          (struct chilli_module *)_options.modules[i].ctx;
       if (!strcmp(_options.modules[i].name, o.modules[i].name))
 	isReload[i]=1;
       if (m->destroy)
@@ -421,7 +423,7 @@ int options_fromfd(int fd, bstring bt) {
 		       _options.modules[i].name);
     if (_options.modules[i].ctx) {
       struct chilli_module *m =
-	(struct chilli_module *)_options.modules[i].ctx;
+          (struct chilli_module *)_options.modules[i].ctx;
       if (m->initialize)
 	m->initialize(_options.modules[i].conf, isReload[i]);
     }
@@ -476,7 +478,7 @@ int options_save(char *file, bstring bt) {
 #ifdef ENABLE_IEEE8021Q
   if (!option_s_s(bt, &o.vlanupdate)) return 0;
 #endif
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_PROXYVSA) || defined(ENABLE_LOCATION)
   if (!option_s_s(bt, &o.locationupdate)) return 0;
 #endif
 
@@ -504,6 +506,8 @@ int options_save(char *file, bstring bt) {
   if (!option_s_s(bt, &o.routeif)) return 0;
   if (!option_s_s(bt, &o.peerkey)) return 0;
 
+  if (!option_s_s(bt, &o.rfc7710uri)) return 0;
+
   if (!option_s_s(bt, &o.macsuffix)) return 0;
   if (!option_s_s(bt, &o.macpasswd)) return 0;
 
@@ -522,6 +526,7 @@ int options_save(char *file, bstring bt) {
   if (!option_s_s(bt, &o.sslkeypass)) return 0;
   if (!option_s_s(bt, &o.sslcertfile)) return 0;
   if (!option_s_s(bt, &o.sslcafile)) return 0;
+  if (!option_s_s(bt, &o.sslciphers)) return 0;
 #endif
 #ifdef USING_IPC_UNIX
   if (!option_s_s(bt, &o.unixipc)) return 0;
@@ -531,9 +536,6 @@ int options_save(char *file, bstring bt) {
 #endif
 #ifdef HAVE_NETFILTER_COOVA
   if (!option_s_s(bt, &o.kname)) return 0;
-#endif
-#ifdef ENABLE_DNSLOG
-  if (!option_s_s(bt, &o.dnslog)) return 0;
 #endif
 #ifdef ENABLE_IPWHITELIST
   if (!option_s_s(bt, &o.ipwhitelist)) return 0;
@@ -607,7 +609,7 @@ int options_save(char *file, bstring bt) {
     if (_options.uid) {
       if (chown(file, _options.uid, _options.gid)) {
 	syslog(LOG_ERR, "%d could not chown() %s",
-		errno, _options.binconfig);
+               errno, _options.binconfig);
       }
     }
   }
@@ -679,7 +681,7 @@ void options_cleanup() {
     if (!_options.modules[i].ctx) continue;
     else {
       struct chilli_module *m =
-	(struct chilli_module *)_options.modules[i].ctx;
+          (struct chilli_module *)_options.modules[i].ctx;
       if (m->destroy)
 	m->destroy(0);
     }

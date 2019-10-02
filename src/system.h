@@ -20,16 +20,10 @@
 #ifndef _SYSTEM_H
 #define _SYSTEM_H
 
-#include "../config.h"
+#include "config.h"
 #ifdef ENABLE_CONFIG
 #include ENABLE_CONFIG
 #endif
-
-/*
- *   I do not like this here, but otherwise
- *   __u64 is not defined. Set by -ansi
-#undef __STRICT_ANSI__
- */
 
 #include <ctype.h>
 #include <stdint.h>
@@ -123,6 +117,11 @@
 #include <sys/sysinfo.h>
 #endif
 
+#ifdef HAVE_INTTYPES_H
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+#endif
+
 #if defined(__linux__)
 #include <asm/types.h>
 #include <linux/if.h>
@@ -133,6 +132,15 @@
 #include <linux/rtnetlink.h>
 #ifndef HAVE_SYS_UN_H
 #include <linux/un.h>
+#endif
+
+#ifdef HAVE_SYS_SYSINFO_H
+#include <sys/sysinfo.h>
+#else
+#ifdef HAVE_LINUX_SYSINFO_H
+#define _LINUX_KERNEL_H
+#include <linux/sysinfo.h>
+#endif
 #endif
 
 #elif defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
@@ -164,6 +172,10 @@
 
 #ifdef HAVE_NET_IF_TUN_H
 #include <net/if_tun.h>
+#endif
+
+#if defined(HAVE_NET_ETHERNET_H) && !defined(__linux__)
+#include <net/ethernet.h>
 #endif
 
 #ifdef HAVE_ASM_TYPES_H
@@ -230,31 +242,12 @@
 #include <ifaddrs.h>
 #endif
 
-#undef LITTLE_ENDIAN
-#undef BIG_ENDIAN
-
-#if (defined(__BYTE_ORDER) && defined(__LITTLE_ENDIAN) && __BYTE_ORDER == __LITTLE_ENDIAN) || \
-    (defined(i386) || defined(__i386__) || defined(__i486__) || \
-     defined(__i586__) || defined(__i686__) || defined(vax) || defined(MIPSEL))
-# define LITTLE_ENDIAN 1
-# define BIG_ENDIAN 0
-#elif (defined(__BYTE_ORDER) && defined(__BIG_ENDIAN) && __BYTE_ORDER == __BIG_ENDIAN) || \
-      (defined(sparc) || defined(POWERPC) || defined(mc68000) || defined(sel))
-# define LITTLE_ENDIAN 0
-# define BIG_ENDIAN 1
-#else
-# define LITTLE_ENDIAN 0
-# define BIG_ENDIAN 0
-#endif
-
 #ifndef SI_LOAD_SHIFT
 #define SI_LOAD_SHIFT 16
 #endif
 
 #include <unistd.h>
 #include <errno.h>
-
-#define safe_snprintf portable_snprintf
 
 int safe_accept(int fd, struct sockaddr *sa, socklen_t *lenptr);
 int safe_select(int nfds, fd_set *readfds, fd_set *writefds,
@@ -279,21 +272,20 @@ int safe_sendto(int s, const void *b, size_t blen, int flags,
 		const struct sockaddr *dest_addr, socklen_t addrlen);
 int safe_sendmsg(int sockfd, struct msghdr *msg, int flags);
 int safe_close (int fd);
-pid_t safe_fork();
 
 #ifndef TEMP_FAILURE_RETRY
-#define TEMP_FAILURE_RETRY(expression) \
-    ({ \
-        long int _result; \
-        do _result = (long int) (expression); \
-        while (_result == -1L && errno == EINTR); \
-        _result; \
-    })
+#define TEMP_FAILURE_RETRY(expression)          \
+  ({                                            \
+    long int _result;                           \
+    do _result = (long int) (expression);       \
+    while (_result == -1L && errno == EINTR);   \
+    _result;                                    \
+  })
 #endif
 
 #define SET_SA_FAMILY(addr, family)			\
-    memset ((char *) &(addr), '\0', sizeof(addr));	\
-    addr.sa_family = (family);
+  memset ((char *) &(addr), '\0', sizeof(addr));	\
+  addr.sa_family = (family);
 
 void copy_mac6(uint8_t *, uint8_t *);
 
@@ -313,6 +305,10 @@ void copy_mac6(uint8_t *, uint8_t *);
 #ifdef HAVE_AVL
 #include "avl/avl.h"
 #define HAVE_SEARCH 1
+#endif
+
+#if defined(USING_PCAP)
+#undef USING_MMAP
 #endif
 
 #endif

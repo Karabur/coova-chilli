@@ -41,7 +41,7 @@ int ippool_print(int fd, struct ippool_t *this) {
   int dyn[4] = { 0, 0, 0, 0};
   int stat[4] = { 0, 0, 0, 0};
 
-  safe_snprintf(line, sizeof(line),
+  snprintf(line, sizeof(line),
 		"DHCP lease time %d sec, grace period %d sec\n"
 		"First available dynamic %d Last %d\n"
 		"First available static %d Last %d\n"
@@ -55,7 +55,7 @@ int ippool_print(int fd, struct ippool_t *this) {
 
   safe_write(fd, line, strlen(line));
 
-  safe_snprintf(line, sizeof(line), sep, "Dynamic Pool");
+  snprintf(line, sizeof(line), sep, "Dynamic Pool");
   safe_write(fd, line, strlen(line));
 
   for (n=0; n < this->listsize; n++) {
@@ -72,7 +72,7 @@ int ippool_print(int fd, struct ippool_t *this) {
 	  (this->member[n].is_static ? this->laststat : this->lastdyn) != &this->member[n]) {
 	st[ERR]++;
       } else if (this->member[n].prev == 0 &&
-	  (this->member[n].is_static ? this->firststat : this->firstdyn) != &this->member[n]) {
+                 (this->member[n].is_static ? this->firststat : this->firstdyn) != &this->member[n]) {
 	st[ERR]++;
       } else {
 	st[FREE]++;
@@ -80,14 +80,14 @@ int ippool_print(int fd, struct ippool_t *this) {
     }
 
     if (n == this->dynsize) {
-      safe_snprintf(line, sizeof(line), sep, "Static Pool");
+      snprintf(line, sizeof(line), sep, "Static Pool");
       safe_write(fd, line, strlen(line));
     }
 
     if (this->member[n].peer) {
       struct app_conn_t *appconn = (struct app_conn_t *) this->member[n].peer;
       struct dhcp_conn_t *dhcpconn = (struct dhcp_conn_t *) appconn->dnlink;
-      safe_snprintf(peerLine, sizeof(peerLine),
+      snprintf(peerLine, sizeof(peerLine),
 		    "%s mac=%.2X-%.2X-%.2X-%.2X-%.2X-%.2X ip=%s age=%d",
 		    dhcpconn ? dhcpconn->is_reserved ? " reserved" : "" : "",
 		    appconn->hismac[0],appconn->hismac[1],appconn->hismac[2],
@@ -99,14 +99,14 @@ int ippool_print(int fd, struct ippool_t *this) {
     }
 
     if (this->member[n].in_use) {
-      safe_snprintf(useLine, sizeof(useLine), "-inuse-");
+      snprintf(useLine, sizeof(useLine), "-inuse-");
     } else {
-      safe_snprintf(useLine, sizeof(useLine), "%3d/%3d",
+      snprintf(useLine, sizeof(useLine), "%3d/%3d",
 		    this->member[n].prev ? (int)(this->member[n].prev - this->member) : -1,
-	       this->member[n].next ? (int)(this->member[n].next - this->member) : -1);
+                    this->member[n].next ? (int)(this->member[n].next - this->member) : -1);
     }
 
-    safe_snprintf(line, sizeof(line),
+    snprintf(line, sizeof(line),
 		  "Unit %3d : %7s : %15s :%s%s\n",
 		  n, useLine,
 		  inet_ntoa(this->member[n].addr),
@@ -124,13 +124,13 @@ int ippool_print(int fd, struct ippool_t *this) {
     while (p) { stat[LIST]++; p = p->next; }
   }
 
-  safe_snprintf(line, sizeof(line),
+  snprintf(line, sizeof(line),
 		"Dynamic address: free %d, avail %d, used %d, err %d, sum %d/%d%s\n",
 		dyn[FREE], dyn[LIST], dyn[USED], dyn[ERR], dyn[0]+dyn[1]+dyn[2], this->dynsize,
 		dyn[FREE] != dyn[LIST] ? " - Problem!" : "");
   safe_write(fd, line, strlen(line));
 
-  safe_snprintf(line, sizeof(line),
+  snprintf(line, sizeof(line),
 		"Static address: free %d, avail %d, used %d, err %d, sum %d/%d%s\n",
 		stat[FREE], stat[LIST], stat[USED], stat[ERR], stat[0]+stat[1]+stat[2], this->statsize,
 		stat[FREE] != stat[LIST] ? " - Problem!" : "");
@@ -141,7 +141,7 @@ int ippool_print(int fd, struct ippool_t *this) {
 
 int ippool_hashadd(struct ippool_t *this, struct ippoolm_t *member) {
   uint32_t hash;
-  struct ippoolm_t *p;
+  struct ippoolm_t *p = NULL;
   struct ippoolm_t *p_prev = NULL;
 
   /* Insert into hash table */
@@ -160,7 +160,7 @@ int ippool_hashadd(struct ippool_t *this, struct ippoolm_t *member) {
 
 int ippool_hashdel(struct ippool_t *this, struct ippoolm_t *member) {
   uint32_t hash;
-  struct ippoolm_t *p;
+  struct ippoolm_t *p = NULL;
   struct ippoolm_t *p_prev = NULL;
 
   /* Find in hash table */
@@ -235,7 +235,7 @@ int ippool_new(struct ippool_t **this,
     if ( ((ntohl(addr.s_addr) + start) & m) != (ntohl(addr.s_addr) & m) ) {
       addr.s_addr = htonl(ntohl(addr.s_addr) + start);
       syslog(LOG_ERR, "Invalid dhcpstart=%d (%s) (outside of subnet)!",
-	      start, inet_ntoa(addr));
+             start, inet_ntoa(addr));
       return -1;
     }
 
@@ -253,7 +253,7 @@ int ippool_new(struct ippool_t **this,
 
       if ((end - start) > dynsize) {
 	syslog(LOG_ERR, "Too many IPs between dhcpstart=%d and dhcpend=%d",
-		start, end);
+               start, end);
 	return -1;
       }
 
@@ -335,7 +335,7 @@ int ippool_new(struct ippool_t **this,
        (*this)->hashlog++);
 
   syslog(LOG_DEBUG, "Hashlog %d %d %d", (*this)->hashlog, listsize,
-	  (1 << (*this)->hashlog));
+         (1 << (*this)->hashlog));
 
   /* Determine hashsize */
   (*this)->hashsize = 1 << (*this)->hashlog; /* Fails if mask=0: All Internet*/
@@ -443,17 +443,17 @@ int ippool_getip(struct ippool_t *this,
  * check to see if the given address is available. If available within
  * dynamic address space allocate it there, otherwise allocate within static
  * address space.
-**/
+ **/
 int ippool_newip(struct ippool_t *this,
 		 struct ippoolm_t **member,
 		 struct in_addr *addr,
 		 int statip) {
-  struct ippoolm_t *p;
+  struct ippoolm_t *p = NULL;
   struct ippoolm_t *p2 = NULL;
   uint32_t hash;
 
   syslog(LOG_DEBUG, "Requesting new %s ip: %s",
-	  statip ? "static" : "dynamic", inet_ntoa(*addr));
+         statip ? "static" : "dynamic", inet_ntoa(*addr));
 
   /* If static:
    *   Look in dynaddr.
@@ -482,7 +482,7 @@ int ippool_newip(struct ippool_t *this,
 	return -1;
       }
       if ((addr->s_addr & this->statmask.s_addr) != this->stataddr.s_addr) {
-	syslog(LOG_ERR, "Static out of range");
+	syslog(LOG_ERR, "Static out of range (%s)", inet_ntoa(*addr));
 	return -1;
       }
 #ifdef ENABLE_UAMANYIP
@@ -512,7 +512,7 @@ int ippool_newip(struct ippool_t *this,
   /* if anyip is set and statip return the same ip */
   if (statip && _options.uamanyip && p2 && p2->is_static) {
     syslog(LOG_DEBUG, "Found already allocated static ip %s",
-	    inet_ntoa(p2->addr));
+           inet_ntoa(p2->addr));
     *member = p2;
     return 0;
   }

@@ -10,7 +10,7 @@ chilliincludedir = $(includedir)/chilli
 chilliinclude_HEADERS = \
 chilli.h session.h garden.h radius.h options.h \
 tun.h ippool.h md5.h redir.h dhcp.h iphash.h \
-radius_wispr.h radius_chillispot.h ssl.h dns.h net.h \
+radius_wispr.h radius_coovachilli.h ssl.h dns.h net.h \
 pkt.h conn.h lookup.h chilli_limits.h cmdline.h debug.h \
 radius_pkt.h ../bstring/bstrlib.h ../config.h system.h 
 
@@ -39,7 +39,7 @@ chilli_query_SOURCES = main-query.c
 chilli_opt_SOURCES = main-opt.c 
 
 libchilli_la_LIBADD = $(top_builddir)/bstring/libbstring.la 
-LDADD = libchilli.la ${LIBRT} $(top_builddir)/bstring/libbstring.la 
+LDADD = libchilli.la ${LIBRT} $(top_builddir)/bstring/libbstring.la ${LIBJSON}
 
 if WITH_MINICONFIG
 chilli_opt_SOURCES += cmdline.mini.c
@@ -132,7 +132,7 @@ sbin_PROGRAMS += chilli_proxy
 chilli_proxy_SOURCES = main-proxy.c 
 chilli_proxy_LDADD = ${LDADD}
 if WITH_CURL
-chilli_proxy_LDADD += -lcurl -lz 
+chilli_proxy_LDADD += ${LIBCURL} 
 endif
 endif
 
@@ -154,7 +154,7 @@ sbin_PROGRAMS += chilli_redir
 chilli_redir_SOURCES = main-redir.c 
 chilli_redir_LDADD = ${LDADD}
 if WITH_CURL
-chilli_redir_LDADD += -lcurl -lz 
+chilli_redir_LDADD += ${LIBCURL} 
 endif
 endif
 

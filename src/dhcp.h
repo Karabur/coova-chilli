@@ -37,6 +37,7 @@
 #define DHCP_OPTION_DOMAIN_NAME    15
 #define DHCP_OPTION_INTERFACE_MTU  26
 #define DHCP_OPTION_STATIC_ROUTES  33
+#define DHCP_OPTION_VENDOR_SPECIFIC_INFORMATION 43
 #define DHCP_OPTION_REQUESTED_IP   50
 #define DHCP_OPTION_LEASE_TIME     51
 #define DHCP_OPTION_MESSAGE_TYPE   53
@@ -46,6 +47,7 @@
 #define DHCP_OPTION_CLIENT_IDENTIFIER 61
 #define DHCP_OPTION_CLIENT_FQDN    81
 #define DHCP_OPTION_82    82
+#define DHCP_OPTION_CAPTIVE_PORTAL_URI 160
 
 /* !!highly experimental!! */
 #define DHCP_OPTION_CALLED_STATION_ID  197
@@ -204,7 +206,7 @@ struct dhcp_t {
 
   int numconn;          /* Maximum number of connections */
 
-#if defined (__FreeBSD__) || defined (__APPLE__) || defined (__OpenBSD__)
+#if defined (__FreeBSD__) || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
   struct pkt_buffer pb;
 #endif
 
@@ -259,7 +261,8 @@ struct dhcp_t {
   /* Call back functions */
   int (*cb_data_ind) (struct dhcp_conn_t *conn, uint8_t *pack, size_t len);
   int (*cb_eap_ind)  (struct dhcp_conn_t *conn, uint8_t *pack, size_t len);
-  int (*cb_request) (struct dhcp_conn_t *conn, struct in_addr *addr, uint8_t *pack, size_t len);
+  int (*cb_request) (struct dhcp_conn_t *conn, struct in_addr *addr,
+                     uint8_t *pack, size_t len);
   int (*cb_connect) (struct dhcp_conn_t *conn);
   int (*cb_disconnect) (struct dhcp_conn_t *conn, int term_cause);
 };
@@ -299,25 +302,29 @@ int dhcp_relay_decaps(struct dhcp_t *this, int idx);
 int dhcp_data_req(struct dhcp_conn_t *conn, struct pkt_buffer *pb, int ethhdr);
 uint8_t * dhcp_nexthop(struct dhcp_t *);
 
-#if defined (__FreeBSD__) || defined (__APPLE__) || defined (__OpenBSD__)
+#if defined (__FreeBSD__) || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
 int dhcp_receive(struct dhcp_t *this, int idx);
 #endif
 
 int dhcp_set_cb_data_ind(struct dhcp_t *this,
-  int (*cb_data_ind) (struct dhcp_conn_t *conn, uint8_t *pack, size_t len));
+                         int (*cb_data_ind) (struct dhcp_conn_t *conn,
+                                             uint8_t *pack, size_t len));
 
 int dhcp_set_cb_request(struct dhcp_t *this,
-  int (*cb_request) (struct dhcp_conn_t *conn,
-		     struct in_addr *addr, uint8_t *pack, size_t len));
+                        int (*cb_request) (struct dhcp_conn_t *conn,
+                                           struct in_addr *addr,
+                                           uint8_t *pack, size_t len));
 
 int dhcp_set_cb_disconnect(struct dhcp_t *this,
-  int (*cb_disconnect) (struct dhcp_conn_t *conn, int term_cause));
+                           int (*cb_disconnect) (struct dhcp_conn_t *conn,
+                                                 int term_cause));
 
 int dhcp_set_cb_connect(struct dhcp_t *this,
-  int (*cb_connect) (struct dhcp_conn_t *conn));
+                        int (*cb_connect) (struct dhcp_conn_t *conn));
 
 int dhcp_set_cb_eap_ind(struct dhcp_t *this,
-  int (*cb_eap_ind) (struct dhcp_conn_t *conn, uint8_t *pack, size_t len));
+                        int (*cb_eap_ind) (struct dhcp_conn_t *conn,
+                                           uint8_t *pack, size_t len));
 
 int dhcp_hashget(struct dhcp_t *this, struct dhcp_conn_t **conn, uint8_t *hwaddr);
 

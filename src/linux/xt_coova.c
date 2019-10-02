@@ -30,6 +30,7 @@
 #include <linux/bitops.h>
 #include <linux/skbuff.h>
 #include <linux/inet.h>
+#include <linux/version.h>
 #include <net/net_namespace.h>
 
 #include <linux/netfilter/x_tables.h>

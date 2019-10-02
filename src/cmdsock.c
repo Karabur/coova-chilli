@@ -32,7 +32,7 @@ cmdsock_init() {
 
     local.sun_family = AF_UNIX;
 
-    strcpy(local.sun_path, _options.cmdsocket);
+    strlcpy(local.sun_path, _options.cmdsocket, sizeof(local.sun_path));
     unlink(local.sun_path);
 
     if (bind(cmdsock, (struct sockaddr *)&local,
@@ -49,7 +49,7 @@ cmdsock_init() {
 	if (_options.uid) {
 	  if (chown(_options.cmdsocket, _options.uid, _options.gid)) {
 	    syslog(LOG_ERR, "%d could not chown() %s",
-		    errno, _options.cmdsocket);
+                   errno, _options.cmdsocket);
 	  }
 	}
       }
@@ -106,7 +106,7 @@ void cmdsock_shutdown(int s) {
   if (s < 0) {
     return;
   }
-  syslog(LOG_DEBUG, "Shutting down cmdsocket");
+  syslog(LOG_DEBUG, "%s(%d): Shutting down cmdsocket", __FUNCTION__, __LINE__);
   shutdown(s, 2);
   close(s);
 }

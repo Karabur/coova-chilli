@@ -55,16 +55,12 @@ typedef struct {
 #include <cyassl/openssl/pem.h>
 #endif
 
-#define OPENSSL_TMPKEY_RSA512   0
-#define OPENSSL_TMPKEY_RSA1024  1
-#define OPENSSL_TMPKEY_DH512    2
-#define OPENSSL_TMPKEY_DH1024   3
 #define OPENSSL_TMPKEY_MAX      4
 
 #define OPENSSL_NO_CERT      (SSL_VERIFY_NONE)
 #define OPENSSL_REQUEST_CERT (SSL_VERIFY_PEER)
-#define OPENSSL_REQUIRE_CERT (SSL_VERIFY_PEER|\
-                              SSL_VERIFY_CLIENT_ONCE|\
+#define OPENSSL_REQUIRE_CERT (SSL_VERIFY_PEER|                  \
+                              SSL_VERIFY_CLIENT_ONCE|           \
                               SSL_VERIFY_FAIL_IF_NO_PEER_CERT)
 
 typedef struct {

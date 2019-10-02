@@ -177,7 +177,7 @@
 
 #include "radius_pkt.h"
 #include "radius_wispr.h"
-#include "radius_chillispot.h"
+#include "radius_coovachilli.h"
 
 struct radius_queue_t {      /* Holder for queued packets */
   int state;                 /* 0=empty, 1=full */
@@ -190,7 +190,7 @@ struct radius_queue_t {      /* Holder for queued packets */
 #ifdef RADIUS_QUEUE_PACKET_PTR
   *
 #endif
-                         p;  /* The packet stored */
+  p;  /* The packet stored */
   int next;                  /* Pointer to the next in queue. -1: Last */
   int prev;                  /* Pointer to the previous in queue. -1: First */
 };
@@ -298,6 +298,10 @@ int radius_set_cb_coa_ind(struct radius_t *this,
 			  int (*cb_coa_ind) (struct radius_t *radius,
 					     struct radius_packet_t *pack,
 					     struct sockaddr_in *peer));
+
+int radius_pkt_send(struct radius_t *this,
+      struct radius_packet_t *pack,
+      struct sockaddr_in *peer);
 
 /* Send of a request */
 int radius_req(struct radius_t *this,

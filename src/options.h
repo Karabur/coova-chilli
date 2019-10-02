@@ -217,7 +217,7 @@ struct options_t {
   uint8_t macreauth:1;              /* Use MAC re-authentication on /prelogin */
   uint8_t macauthdeny:1;            /* Deny any access to those given Access-Reject */
   uint8_t macallowlocal:1;          /* Do not use RADIUS for authenticating the macallowed */
-  uint8_t radiusoriginalurl:1;      /* Send ChilliSpot-OriginalURL in AccessRequest */
+  uint8_t radiusoriginalurl:1;      /* Send CoovaChilli-OriginalURL in AccessRequest */
   uint8_t dhcpradius:1;             /* Send certain DHCP options in RADIUS attributes */
   uint8_t has_nexthop:1;            /* Has a nexthop entry */
   uint8_t dhcp_broadcast:1;         /* always broadcast DHCP (when not relaying) */
@@ -274,7 +274,7 @@ struct options_t {
   uint8_t proxymacaccept:1;         /* Auto-accept non-EAP requests on proxy port */
   uint8_t proxyonacct:1;
 #endif
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_LOCATION) || defined(ENABLE_PROXYVSA)
   uint8_t vlanlocation:1;
   uint8_t location_stop_start:1;
   uint8_t location_copy_called:1;
@@ -322,6 +322,8 @@ struct options_t {
   uint32_t ipsrc_num_pass_throughs;
 #endif
 
+  char* rfc7710uri; /* RFC 7710 URI, nullptr if not used. */
+
   char* uamdomains[MAX_UAM_DOMAINS];
   int uamdomain_ttl;
 
@@ -340,7 +342,7 @@ struct options_t {
   uint32_t challengetimeout;
   uint32_t challengetimeout2;
 
-#ifdef ENABLE_PROXYVSA
+#if defined(ENABLE_LOCATION) || defined(ENABLE_PROXYVSA)
 #define PROXYVSA_ATTR_CNT 4
   struct {
     uint32_t attr_vsa;
@@ -354,6 +356,7 @@ struct options_t {
   char *sslkeypass;
   char *sslcertfile;
   char *sslcafile;
+  char *sslciphers;
 #endif
 
   /* local content */
@@ -377,10 +380,6 @@ struct options_t {
 #ifdef ENABLE_DHCPOPT
   uint8_t dhcp_options[512];
   int dhcp_options_len;
-#endif
-
-#ifdef ENABLE_DNSLOG
-  char *dnslog;
 #endif
 
 #ifdef ENABLE_IPWHITELIST

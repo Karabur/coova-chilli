@@ -54,8 +54,8 @@ static int chilliauth_cb(struct radius_t *radius,
 
   while (!radius_getnextattr(pack, &attr,
 			     RADIUS_ATTR_VENDOR_SPECIFIC,
-			     RADIUS_VENDOR_CHILLISPOT,
-			     RADIUS_ATTR_CHILLISPOT_CONFIG,
+			     RADIUS_VENDOR_COOVACHILLI,
+			     RADIUS_ATTR_COOVACHILLI_CONFIG,
 			     0, &offset)) {
     printf("%.*s\n", attr->l - 2, (const char *)attr->v.t);
   }
@@ -78,10 +78,15 @@ int static chilliauth() {
     return 1;
   }
 
-  if (radius_new(&radius, &_options.radiuslisten, 0, 0, 0) ||
-      radius_init_q(radius, 4)) {
-    syslog(LOG_ERR, "Failed to create radius");
+  if (radius_new(&radius, &_options.radiuslisten, 0, 0, 0)) {
+    syslog(LOG_ERR, "radius_new: Failed to create radius");
     return ret;
+  }
+
+  if (radius_init_q(radius, 4)) {
+     syslog(LOG_ERR, "radius_init: Failed to initialize radius");
+     radius_free(radius);
+     return ret;
   }
 
   /* get dhcpif mac */
@@ -128,13 +133,13 @@ int static chilliauth() {
     radius_timeleft(radius, &idleTime);
 
     switch (status = select(maxfd + 1, &fds, NULL, NULL, &idleTime)) {
-    case -1:
-      syslog(LOG_ERR, "%s: select() returned -1!", strerror(errno));
-      break;
-    case 0:
-      radius_timeout(radius);
-    default:
-      break;
+      case -1:
+        syslog(LOG_ERR, "%s: select() returned -1!", strerror(errno));
+        break;
+      case 0:
+        radius_timeout(radius);
+      default:
+        break;
     }
 
     if (status > 0) {

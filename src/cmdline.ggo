@@ -1,4 +1,4 @@
-# chilli - ChilliSpot.org. A Wireless LAN Access Point Controller
+# CoovaChilli - http://coova.github.io/. A Wireless LAN Access Point Controller
 # Copyright (C) 2003, 2004, 2005 Mondru AB.
 # Copyright (c) 2006-2012 David Bird (Coova Technologies)
 #
@@ -190,7 +190,7 @@ option "uamui"       - "Program in inetd style to handle all uam requests" strin
 # Centralized Configuration
 option "adminuser"   - "RADIUS administrative user login username" string no
 option "adminpasswd" - "RADIUS administrative user login password" string no
-option "adminupdatefile" - "File for administrative user ChilliSpot-Config settings" string no
+option "adminupdatefile" - "File for administrative user CoovaChilli-Config settings" string no
 option "rtmonfile" - "File to update with routing settings" string no
 
 option "ethers" - "File containing a mapping of MAC addresses to static IP addresses" string no
@@ -207,7 +207,7 @@ option "only8021q"   - "Support 802.1Q VLAN tagged traffic only" flag off
 option "cmdsocket"   - "path to the command unix socket" string no
 option "cmdsocketport" - "Port of command socket. Only used if cmdsocket is not defined." int default="42424" no
 
-option "radiusoriginalurl" - "Turn on the sending of ChilliSpot-OriginalURL in Access-Request" flag off
+option "radiusoriginalurl" - "Turn on the sending of CoovaChilli-OriginalURL in Access-Request" flag off
 option "swapoctets"    - "Swap the meaning of input/output octets/packets" flag   off
 option "usestatusfile" - "Use the status file to keep track of sessions" string no
 option "statusfilesave" - "Aggressively save the status of sessions to status file" flag off
@@ -219,7 +219,7 @@ option "wpaguests"     - "Allow WPA 'Guest' access" flag off
 option "openidauth"    - "Allow OpenID authentication" flag off
 option "papalwaysok"   - "Always allow 'PAP' authentication (depreciated; always on)" flag off
 option "mschapv2"      - "Use MSCHAPv2 authentication where possible" flag off
-option "chillixml"     - "Use ChilliSpot XML in WISPr blocks" flag   off
+option "chillixml"     - "Use CoovaChilli XML in WISPr blocks" flag   off
 option "acctupdate"    - "Allow updating of session attributes in Accounting-Response" flag off
 option "dnsparanoia"   - "Inspect DNS packets and drop responses with any non- A, CNAME, SOA, or MX records (to prevent dns tunnels)" flag off
 option "seskeepalive"  - "Keep sessions 'alive' after a restart of the server" flag off
@@ -257,6 +257,7 @@ option "sslkeyfile"  - "SSL private key file in PEM format" string no
 option "sslkeypass"  - "SSL private key password" string no
 option "sslcertfile" - "SSL certificate file in PEM format" string no
 option "sslcafile"   - "SSL CA certificate file in PEM format" string no
+option "sslciphers"   - "SSL ciphers to use" string no
 option "unixipc"     - "The UNIX IPC Filename to use when compiled with --with-unixipc" string no
 option "uamallowpost" - "Enable to allow a HTTP POST to the standard uamport interface" flag off
 option "natip"     - "IP to use when doing nat on WAN (routeidx)" string no
@@ -264,7 +265,6 @@ option "natport"   - "Port to use when oding nat on the WAN (routeidx)" int defa
 option "redirssl"  - "Enable redirection of SSL/HTTP port (requires SSL support)" flag off
 option "uamuissl"  - "Enable SSL/HTTPS support on the uamuiport" flag off
 
-option "dnslog"    - "Log DNS requests to a file." string no
 option "ipwhitelist" - "Binary IP White List file" string no
 option "uamdomainfile" - "Load uamdomains (regex) from file" string no
 
@@ -288,6 +288,8 @@ option "forcedns1port"   - "Force all DNS to a specific port" int default="0" no
 
 option "forcedns2"   - "Force all secondary DNS to a specific address" string no 
 option "forcedns2port"   - "Force all secondary DNS to a specific port" int default="0" no 
+
+option "rfc7710uri" - "DHCP Captive Portal URI. Defaults to http://uamlisten:uamport/prelogin." string no
 
 option "ipv6" - "Enable IPv6 support" flag off
 option "ipv6mode" - "IPv6 mode is either 6and4 (default), 4to6, or 6to4" string no
