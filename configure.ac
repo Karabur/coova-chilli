@@ -216,7 +216,7 @@ if test x"$enable_json" = xyes; then
 				   [AC_CHECK_LIB([json], [json_object_new_object],
 				   [AC_SUBST([LIBJSON], ["-ljson"])],
 				   [AC_MSG_FAILURE(
-				   [--enable-json was given, but test for libjson failed])],)])])
+				   [--enable-json was given, but test for libjson failed, and no --enable-libjson provided])],)])])
 fi
 
 AC_ARG_ENABLE(debug, [AS_HELP_STRING([--disable-debug],[Disable debugging messages])], 
@@ -729,6 +729,10 @@ AC_ARG_ENABLE(libjson, [AS_HELP_STRING([--enable-libjson],[Enable support for li
 
 AM_CONDITIONAL(WITH_EWTAPI, [test x"$enable_ewtapi" = xyes])
 AM_CONDITIONAL(WITH_JSONLIB, [test x"$enable_ewtapi" = xyes || test x"$enable_libjson" = xyes])
+
+if test x"$enable_libjson" = xyes; then
+   AC_DEFINE(ENABLE_LIBJSON,1,[Define to enable bundled libjson])
+fi
 
 AC_ARG_ENABLE(ssdp, [AS_HELP_STRING([--enable-ssdp],[Enable support for Simple Service Discovery Protocol])], 
   enable_ssdp=$enableval, enable_ssdp=no)

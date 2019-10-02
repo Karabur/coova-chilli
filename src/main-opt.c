@@ -129,6 +129,9 @@ static const char *compile_options = "(RF version) Compiled with "
 #ifdef ENABLE_JSON
     "ENABLE_JSON "
 #endif
+#ifdef ENABLE_LIBJSON
+    "ENABLE_LIBJSON "
+#endif
 #ifdef ENABLE_L2TP_PPP
     "ENABLE_L2TP_PPP "
 #endif
