@@ -1,20 +1,20 @@
 /* -*- mode: c; c-basic-offset: 2 -*- */
-/* 
+/*
  * Copyright (C) 2007-2012 David Bird (Coova Technologies) <support@coova.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 #ifndef _SYSTEM_H
@@ -135,7 +135,7 @@
 #include <linux/un.h>
 #endif
 
-#elif defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__) 
+#elif defined (__FreeBSD__)  || defined (__APPLE__) || defined (__OpenBSD__) || defined (__NetBSD__)
 #include <net/if.h>
 #include <net/bpf.h>
 #include <net/if_dl.h>
@@ -183,7 +183,7 @@
 #endif
 
 #ifdef MTRACE
-#include <mcheck.h> 
+#include <mcheck.h>
 #endif
 
 #ifdef DMALLOC
@@ -255,7 +255,6 @@
 #include <errno.h>
 
 #define safe_snprintf portable_snprintf
-char *safe_strncpy(char *dst, const char *src, size_t size);
 
 int safe_accept(int fd, struct sockaddr *sa, socklen_t *lenptr);
 int safe_select(int nfds, fd_set *readfds, fd_set *writefds,

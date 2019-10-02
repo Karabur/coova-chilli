@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.57)
-AC_INIT(coova-chilli, 1.3.1-svn, support@coova.com)
+AC_INIT(coova-chilli, 1.3.1.3, support@coova.com)
 AC_CONFIG_SRCDIR([src/chilli.c])
 
 AM_INIT_AUTOMAKE
@@ -13,6 +13,7 @@ AC_CONFIG_MACRO_DIR([m4])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CC_C_O
 
 #JJAKO Check for libtool
 AC_PROG_LIBTOOL
@@ -109,7 +110,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_CHECK_FUNCS([gethostbyname getprotoent gettimeofday inet_ntoa \
 memset select socket strdup strerror strstr strtol getline dirname \
-glob getaddrinfo getnameinfo getifaddrs sysinfo])
+glob getaddrinfo getnameinfo getifaddrs sysinfo strlcpy])
 AC_CHECK_LIB(resolv, res_init)
 
 AC_ARG_ENABLE(chilliquery, [AC_HELP_STRING([--disable-chilliquery],[Disable chilli_query])], 
@@ -777,6 +778,8 @@ fi
 
 AC_CHECK_LIB(rt, clock_gettime)
 
+AM_CONDITIONAL([HAVE_STRLCPY], [test "x$ac_cv_func_strlcpy" = xyes])
+
 AC_ARG_ENABLE(config,
  [  --enable-config=file],
  [ if  test "x$enableval" != "x" ; then
@@ -806,7 +809,6 @@ AC_CONFIG_FILES([Makefile
 		 json/Makefile
 		 distro/Makefile
 		 distro/suse/coova-chilli.spec
-		 distro/nethserver/coova-chilli.spec
 		 distro/redhat/coova-chilli.spec])
 
 AC_OUTPUT
